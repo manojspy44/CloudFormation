@@ -46,15 +46,20 @@ Resources:
       PolicyDocument:
         Version: 2012-10-17
         Statement:
-          - Effect: Allow
-            Action:
+          - Action:
               - 's3:GetObject'
+            Effect: Allow
             Principel:
               AWS:
                 - !Sub 'arn:aws:iam::cloudfront:user/Cloudfront Origin Access Identity ${oai}'
-            Resource: !Join['', ['arn:aws:s3:::', !Ref bucket0, '/*']]
+ #           Resource: !Join['',['arn:aws:s3:::', !Ref bucket0, '/*']]
+            Resource: !Join
+              - ''
+              - - 'arn:aws:s3:::'
+                - !Ref bucket0
+                - /*
     
-Output: 
+Outputs: 
   domain:
     Value: !GetAtt bucket0.DomainName
     Export:

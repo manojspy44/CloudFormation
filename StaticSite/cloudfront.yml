@@ -39,7 +39,11 @@ Resources:
           - DomainName: {'Fn::ImportValue': !Sub '${s3Stack}-domain'}   
             Id: widgetOrigin    
             S3OriginConfig:
-              OriginAccessIdentity: !Join['',['origin-access-identity/cloudfront/', {'Fn::ImportValue': !Sub '${s3Stack}-oai'}]]                  
+#              OriginAccessIdentity: !Join['',['origin-access-identity/cloudfront/', {'Fn::ImportValue': !Sub '${s3Stack}-oai'}]]                  
+              OriginAccessIdentity: !Join
+                - ''
+                - - 'origin-access-identity/cloudfront/'
+                  - {'Fn::ImportValue': !Sub '${s3Stack}-oai'}             
         PriceClass: PriceClass_All
         ViewerCertificate:        
           AcmCertificatArn: {'Fn::ImportValue': !Sub '${acmStack}-arn'}  

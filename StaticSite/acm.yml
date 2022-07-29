@@ -32,7 +32,7 @@ Resources:
         - Key: environment
           Value: !Ref environment
 
-Output: 
+Outputs: 
   cert0: 
     Value: !Ref cert0
     Export:
