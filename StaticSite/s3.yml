@@ -52,7 +52,6 @@ Resources:
             Principel:
               AWS:
                 - !Sub 'arn:aws:iam::cloudfront:user/Cloudfront Origin Access Identity ${oai}'
- #           Resource: !Join['',['arn:aws:s3:::', !Ref bucket0, '/*']]
             Resource: !Join
               - ''
               - - 'arn:aws:s3:::'
