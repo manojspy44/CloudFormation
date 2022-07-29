@@ -54,7 +54,7 @@ Resources:
                 - !Sub 'arn:aws:iam::cloudfront:user/Cloudfront Origin Access Identity ${oai}'
             Resource: !Join['', ['arn:aws:s3:::', !Ref bucket0, '/*']]
     
-Output: 
+Outputs: 
   domain:
     Value: !GetAtt bucket0.DomainName
     Export:
