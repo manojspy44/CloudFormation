@@ -1,0 +1,39 @@
+Description: ACM for valueaddsofttech.com
+
+Parameters:
+  r53ZoneId:
+    Type: String
+  owner: 
+    Type: String
+  ownerEmail:
+    Type: String
+  environment: 
+    Type: String
+    Default: development
+    AllowedValues:
+      - development
+      - production
+      - test
+  
+Resources:
+  cert0:
+    Type: AWS::CertificateManager::Certificate
+    Properties: 
+      DomainName: '*.demoexa.com'
+      DomainValidationOptions:
+        - DomainName: 'demoexa.com'
+          HostedZoneId: !Ref r53ZoneId
+      ValidationMethod: DNS
+      Tags:
+        - Key: owner
+          Value: !Ref owner
+        - Key: ownerEmail
+          Value: !Ref ownerEmail
+        - Key: environment
+          Value: !Ref environment
+
+Output: 
+  cert0: 
+    Value: !Ref cert0
+    Export:
+      Name: !Sub '${AWS::StackName}-arn'

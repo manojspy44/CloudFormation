@@ -1,0 +1,66 @@
+Description: Deploy S3
+
+Parameters: 
+  owner: 
+    Type: String
+  ownerEmail:
+    Type: String
+  environment: 
+    Type: String
+    Default: development
+    AllowedValues:
+      - development
+      - production
+      - test
+          
+Resources: 
+  oai:
+    Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
+    Properties: 
+      CloudFrontOriginAccessIdentityConfig: 
+        Comment: 'OAI User'
+                
+  bucket0:
+    Type: AWS::S3::Bucket
+    Properties:
+      AccessControl: PublicRead
+      BucketName: 'www.demoexa.com'
+      WebsiteConfiguration: 
+        IndexDocument: index.html
+        ErrorDocument: 404.html
+      Tags:
+        - Key: owner
+          Value: !Ref owner
+        - Key: ownerEmail
+          Value: !Ref ownerEmail
+        - Key: environment
+          Value: !Ref environment
+          
+  policy0: 
+    Type: AWS::S3::BucketPolicy
+    DependsOn: 
+      - bucket0
+      - oai
+    Properties:
+      Bucket: !Ref bucket0
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 's3:GetObject'
+            Principel:
+              AWS:
+                - !Sub 'arn:aws:iam::cloudfront:user/Cloudfront Origin Access Identity ${oai}'
+            Resource: !Join['', ['arn:aws:s3:::', !Ref bucket0, '/*']]
+    
+Output: 
+  domain:
+    Value: !GetAtt bucket0.DomainName
+    Export:
+      Name: !Sub '${AWS::StackName}-domain'
+      
+  oai:
+    Value: !Ref oai
+    Export:
+      Name: !Sub '${AWS::StackName}-oai'

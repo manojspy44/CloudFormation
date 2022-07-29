@@ -1,0 +1,55 @@
+Description: Deploy Cloud Front
+
+Parameters:
+  s3Stack:
+    Type: String
+    Default: demo-s3
+  acmStack:
+    Type: String
+    Default: demo-acm
+  owner: 
+    Type: String
+  ownerEmail:
+    Type: String
+  environment: 
+    Type: String
+    Default: development
+    AllowedValues:
+      - development
+      - production
+      - test
+
+Resources:
+  distribution0: 
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig: 
+        Aliases: 
+          - www.demoexa.com
+        Comment: Demo distribution
+        DefaultCacheBehavior:
+          Compress: true
+          ForwardedValues:
+            QueryString: false
+          TargetOriginId: widgetOrigin
+          ViewerProtocolPolicy: redirect-to-https
+        DefaultRootObject: index.html  
+        Enabled: true
+        Origins:
+          - DomainName: {'Fn::ImportValue': !Sub '${s3Stack}-domain'}   
+            Id: widgetOrigin    
+            S3OriginConfig:
+              OriginAccessIdentity: !Join['',['origin-access-identity/cloudfront/', {'Fn::ImportValue': !Sub '${s3Stack}-oai'}]]                  
+        PriceClass: PriceClass_All
+        ViewerCertificate:        
+          AcmCertificatArn: {'Fn::ImportValue': !Sub '${acmStack}-arn'}  
+          MinimumProtocolVersion: TLSv1.2_2018
+          SslSupportMethod: sni-only
+      Tags:
+        - Key: owner
+          Value: !Ref owner
+        - Key: ownerEmail
+          Value: !Ref ownerEmail
+        - Key: environment
+          Value: !Ref environment
+          
