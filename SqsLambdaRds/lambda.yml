@@ -1,0 +1,79 @@
+AWSTemplateFormatVersion : 2010-09-09
+Parameters:
+  MySourceQueueName:
+    Type: String
+    Description: Standard Queue Name
+    Default: app-queue
+  MyDeadLetterQueueName:
+    Type: String
+    Description: Fifo Queue Name
+    Default: app-dead-letter-queue
+
+
+Resources:  
+  MySourceQueue: 
+    Type: AWS::SQS::Queue
+    Properties: 
+      QueueName: !Ref MySourceQueueName
+      RedrivePolicy: 
+        deadLetterTargetArn: !GetAtt MyDeadLetterQueue.Arn
+        maxReceiveCount: 5    
+  MyDeadLetterQueue: 
+    Type: AWS::SQS::Queue
+    Properties: 
+      QueueName: !Ref MyDeadLetterQueueName 
+      
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Policies:
+        - PolicyName: allowLambdaLogs
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+            - Effect: Allow
+              Action:
+              - logs:*
+              Resource: arn:aws:logs:*:*:*
+        - PolicyName: allowSqs
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+            - Effect: Allow
+              Action:
+              - sqs:ReceiveMessage
+              - sqs:DeleteMessage
+              - sqs:GetQueueAttributes
+              - sqs:ChangeMessageVisibility
+              Resource: !GetAtt MySourceQueue.Arn
+      
+  LambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        ZipFile: >
+           def lambda_handler(event, context):
+           pass
+      FunctionName: "testfunction"
+      Handler: lambda_function.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: python3.7
+      Timeout: 29
+      MemorySize: 512
+
+  LambdaFunctionEventSourceMapping:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      BatchSize: 10
+      Enabled: true
+      EventSourceArn: !GetAtt MySourceQueue.Arn
+      FunctionName: !GetAtt LambdaFunction.Arn

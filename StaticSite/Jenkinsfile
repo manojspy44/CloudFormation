@@ -1,0 +1,49 @@
+pipeline {
+   agent any
+   
+   environment {
+       owner = 'manojw'
+       ownerEmail = 'manojw@valueaddsofttech.com'
+       project = 'demo/static-site'
+       environment = 'development'
+       profile = 'co-demo'
+   }
+   stages {
+       stage("acm-deploy") {
+           environment {
+               stackName = 'demo-acm'
+               r53ZoneId = 'Z051830099PXZ7RK74GN'
+           }
+           steps {
+               sh "aws cloudformation validate-template --template-body file://StaticSite/acm.yml"                
+               sh "/usr/local/bin/aws cloudformation deploy --template-file ./StaticSite/acm.yml --stack-name $stackName --no-execute-changeset --no-fail-on-empty-changeset --tags owner=$owner ownerEmail=$ownerEmail project=$project environment=$environment --parameter-overrides r53ZoneId=$r53ZoneId owner=$owner ownerEmail=$ownerEmail project=$project environment=$environment --profile co-demo"
+               sh "/usr/local/bin/aws cloudformation wait stack-exists --stack-name $stackName --profile $profile"
+               sh "/usr/local/bin/aws cloudformation update-termination-protaction --stack-name $stackName --enable-termination-protection --profile $profile"
+           }
+       }
+           
+       stage("s3-deploy"){
+           environment {
+               stackName = 'demo-s3'
+           }
+           steps{
+              sh "aws cloudformation validate-template --template-body file://StaticSite/s3.yml"
+              sh "/usr/local/bin/aws cloudformation deploy --template-file ./StaticSite/s3.yml --stack-name $stackName --no-execute-changeset --no-fail-on-empty-changeset --tags owner=$owner ownerEmail=$ownerEmail project=$project environment=$environment --parameter-overrides owner=$owner ownerEmail=$ownerEmail project=$project environment=$environment --profile co-demo"
+              sh "/usr/local/bin/aws cloudformation wait stack-exists --stack-name $stackName --profile $profile"
+              sh "/usr/local/bin/aws cloudformation update-termination-protaction --stack-name $stackName --enable-termination-protection --profile $profile"
+           }
+        }
+       
+       stage("cloudfront-deploy"){
+           environment {
+               stackName = 'demo-cloudfront'
+           }
+           steps{
+              sh "aws cloudformation validate-template --template-body file://StaticSite/cloudfront.yml"             
+              sh "/usr/local/bin/aws cloudformation deploy --template-file ./StaticSite/cloudfront.yml --stack-name $stackName --no-execute-changeset --no-fail-on-empty-changeset --tags owner=$owner ownerEmail=$ownerEmail project=$project environment=$environment --parameter-overrides owner=$owner ownerEmail=$ownerEmail project=$project environment=$environment --profile co-demo"
+              sh "/usr/local/bin/aws cloudformation wait stack-exists --stack-name $stackName --profile $profile"
+              sh "/usr/local/bin/aws cloudformation update-termination-protaction --stack-name $stackName --enable-termination-protection --profile $profile"
+           }
+        }
+   }
+}
