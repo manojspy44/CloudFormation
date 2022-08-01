@@ -17,6 +17,7 @@ aws lambda update-function-code --function-name <function_name> --zip-file fileb
 Note: 
 - Update the RDS endpoint url in lambda function once it deployed. 
 - Below is test SQS message. 
+- Whitelist ingress tcp port 3306 in defult VPC.   
 ``` bash
 {"id": 1, "data": {"one": "red", "two": "yellow"}}
 ```
